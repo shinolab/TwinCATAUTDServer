@@ -261,9 +261,9 @@ dependencies = [
 
 [[package]]
 name = "autd3-link-twincat"
-version = "30.0.0"
+version = "30.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd62d1a7511e8483e17be35d8800a4efbb5eafe3ab79fa73c806d087748e4fd1"
+checksum = "87f225250130a31a5f5a00b89932abcfcc79748825d535503575c03033344403"
 dependencies = [
  "autd3-core",
  "libloading",
