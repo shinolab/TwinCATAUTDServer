@@ -1,6 +1,6 @@
 [package]
 name = "TwinCATAUTDServerLightweight"
-version = "31.0.1"
+version = "32.0.0"
 authors = ["shun suzuki <suzuki@hapis.k.u-tokyo.ac.jp>"]
 edition = "2024"
 license = "MIT"
@@ -13,8 +13,8 @@ keywords = ["autd"]
 [dependencies]
 clap = { version = "4.5.32", features = ["derive"] }
 tokio = { version = "1.44.1", features = ["macros", "rt-multi-thread"] }
-autd3-protobuf = { version = "31.0.1", features = ["lightweight", "async-trait"] }
-autd3-link-twincat = { version = "31.0.1", features = ["async-trait"] }
+autd3-protobuf = { version = "32.0.0", features = ["lightweight", "async-trait"] }
+autd3-link-twincat = { version = "32.0.0", features = ["async-trait"] }
 anyhow = "1.0.97"
 ctrlc = "3.4.5"
 tonic = "0.12.3"
