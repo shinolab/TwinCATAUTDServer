@@ -1,8 +1,7 @@
-namespace TwinCATAUTDServer
+﻿namespace TwinCATAUTDServer;
+
+internal enum SyncMode
 {
-    internal enum SyncMode
-    {
-        FreeRun,
-        DC
-    }
+    FreeRun,
+    DC
 }
