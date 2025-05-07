@@ -4,7 +4,6 @@ namespace TwinCATAUTDServer;
 
 internal enum CpuBaseTime
 {
-    None,
     T_1ms,
     T_500us,
     T_333us,
@@ -18,6 +17,7 @@ internal enum CpuBaseTime
     T_66p6us,
     T_62p5us,
     T_50us,
+    None
 }
 
 internal static class CpuBaseTimeParser
@@ -76,5 +76,3 @@ internal static class CpuBaseTimeParser
             throw new ArgumentException($"Invalid CPU base time '{time}'. Available options: {availableTime}.");
     }
 }
-
-
