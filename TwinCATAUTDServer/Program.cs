@@ -1,5 +1,6 @@
 ﻿using System;
 using System.CommandLine;
+using System.CommandLine.Parsing;
 
 namespace TwinCATAUTDServer;
 internal class Program
@@ -16,18 +17,18 @@ internal class Program
         );
         var sync0CycleTime = new Option<int>(
             aliases: new[] { "--sync0", "-s" },
-            description: "Sync0 cycle time in units of 500us",
+            description: "Sync0 cycle time in units of 500μs",
             getDefaultValue: () => 2
         );
         var taskCycleTime = new Option<int>(
             aliases: new[] { "--task", "-t" },
-            description: "Send task cycle time in units of 500us",
-            getDefaultValue: () => 2
-        );
-        var cpuBaseTime = new Option<int>(
-            aliases: new[] { "--base", "-b" },
-            description: "CPU base time in units of 500us",
+            description: "Send task cycle time in units of CPU base time",
             getDefaultValue: () => 1
+        );
+        var cpuBaseTime = new Option<CpuBaseTime>(
+            aliases: new[] { "--base", "-b" },
+            description: "CPU base time",
+            parseArgument: CpuBaseTimeParser.Parse
         );
         var syncMode = new Option<SyncMode>(
             aliases: new[] { "--mode", "-m" },
@@ -54,8 +55,9 @@ internal class Program
     }
 
     [STAThread]
-    private static void Setup(string clientIpAddr, int sync0CycleTime, int taskCycleTime, int cpuBaseTime, SyncMode syncMode, bool keep)
+    private static void Setup(string clientIpAddr, int sync0CycleTime, int taskCycleTime, CpuBaseTime cpuBaseTime, SyncMode syncMode, bool keep)
     {
-        (new SetupTwinCAT(clientIpAddr, syncMode, 5000 * taskCycleTime, 5000 * cpuBaseTime, 500000 * sync0CycleTime, keep)).Run();
+        var baseTime = CpuBaseTimeParser.ToValueUnitsOf100ns(cpuBaseTime);
+        (new SetupTwinCAT(clientIpAddr, syncMode, baseTime * taskCycleTime, baseTime, 500000 * sync0CycleTime, keep)).Run();
     }
 }
