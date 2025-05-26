@@ -137,7 +137,7 @@ version = "32.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6feb8fdc10ccefef1f96abf09ae684593de37e0770c60891ec0cd1890c7a3c8c"
 dependencies = [
- "autd3-core",
+ "autd3-core 32.1.1",
  "autd3-derive",
  "autd3-driver",
  "autd3-firmware-emulator",
@@ -176,6 +176,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "autd3-core"
+version = "33.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e47f5b7d6bf912bbdb0b913d7e6347054e8127a99a4ed5fe7b1fb4f74b11e6cc"
+dependencies = [
+ "async-trait",
+ "bvh",
+ "derive_more",
+ "getset",
+ "nalgebra",
+ "paste",
+ "thiserror",
+ "time",
+ "zerocopy",
+]
+
+[[package]]
 name = "autd3-derive"
 version = "32.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -191,7 +208,7 @@ version = "32.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b08e7e7850a54019135a27961ecad35f19e369094d443548e001bd8c2feffc7d"
 dependencies = [
- "autd3-core",
+ "autd3-core 32.1.1",
  "autd3-derive",
  "bitfield-struct",
  "bitflags",
@@ -227,7 +244,7 @@ version = "32.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "468a5e30b3b7b96bc6f396ca60db57fa113a3e87e225b61a73f335c789e7cba8"
 dependencies = [
- "autd3-core",
+ "autd3-core 32.1.1",
  "derive_more",
  "nalgebra",
  "rand",
@@ -239,11 +256,11 @@ dependencies = [
 
 [[package]]
 name = "autd3-link-twincat"
-version = "32.1.1"
+version = "33.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "869c534ac48a795821c8b2498d766122c2799325f999720d5ca328534f7a0208"
+checksum = "2e6fa3ed7fcc122ef039c20fb609332405aadcbd2ea3f7c29b007894e4f9112b"
 dependencies = [
- "autd3-core",
+ "autd3-core 33.0.0",
  "libloading",
  "thiserror",
  "zerocopy",
@@ -256,7 +273,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c848e610076cb7c15cb1758ae8a950f8dc9b4804e104d595112dafc4cf006312"
 dependencies = [
  "autd3",
- "autd3-core",
+ "autd3-core 32.1.1",
  "autd3-driver",
  "autd3-gain-holo",
  "derive_more",

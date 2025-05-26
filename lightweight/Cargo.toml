@@ -14,7 +14,7 @@ keywords = ["autd"]
 clap = { version = "4.5.38", features = ["derive"] }
 tokio = { version = "1.45.1", features = ["macros", "rt-multi-thread"] }
 autd3-protobuf = { version = "32.1.1", features = ["lightweight", "async-trait"] }
-autd3-link-twincat = { version = "32.1.1", features = ["async-trait"] }
+autd3-link-twincat = { version = "33.0.0", features = ["async-trait"] }
 anyhow = "1.0.98"
 ctrlc = "3.4.7"
 tonic = "0.13.1"
