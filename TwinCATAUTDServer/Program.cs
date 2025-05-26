@@ -1,5 +1,5 @@
-﻿using System;
-using System.CommandLine;
+﻿using System.CommandLine;
+using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 
 namespace TwinCATAUTDServer;
@@ -12,22 +12,22 @@ internal class Program
 
         var clientIpAddr = new Option<string>(
             aliases: new[] { "--client", "-c" },
-            description: "Client IP address",
+            description: "Client IP address. if empty, use localhost.",
             getDefaultValue: () => ""
         );
         var sync0CycleTime = new Option<int>(
             aliases: new[] { "--sync0", "-s" },
-            description: "Sync0 cycle time in units of 500μs",
+            description: "Sync0 cycle time in units of 500μs.",
             getDefaultValue: () => 2
         );
         var taskCycleTime = new Option<int>(
             aliases: new[] { "--task", "-t" },
-            description: "Send task cycle time in units of CPU base time",
+            description: "Task cycle time in units of CPU base time.",
             getDefaultValue: () => 1
         );
         var cpuBaseTime = new Option<CpuBaseTime>(
             aliases: new[] { "--base", "-b" },
-            description: "CPU base time",
+            description: "CPU base time.",
             parseArgument: CpuBaseTimeParser.Parse
         );
         var syncMode = new Option<SyncMode>(
@@ -37,7 +37,7 @@ internal class Program
         );
         var keep = new Option<bool>(
             aliases: new[] { "--keep", "-k" },
-            description: "Keep TwinCAT config window open",
+            description: "Keep TwinCAT XAE Shell window open",
             getDefaultValue: () => false
         );
 
@@ -51,7 +51,18 @@ internal class Program
 
         rootCommand.SetHandler(Setup, clientIpAddr, sync0CycleTime, taskCycleTime, cpuBaseTime, syncMode, keep);
 
-        return rootCommand.Invoke(args);
+        var parser = new CommandLineBuilder(rootCommand)
+        .UseDefaults()
+        .UseHelp(ctx =>
+        {
+            ctx.HelpBuilder.CustomizeSymbol(cpuBaseTime,
+                firstColumnText: (_) => $"-b, --base <{string.Join("|", CpuBaseTimeParser.AvailableTime.Select(x => x.Key))}>",
+                secondColumnText: (_) => $"{cpuBaseTime.Description} [default: 1ms]"
+                );
+        })
+        .Build();
+
+        return parser.Invoke(args);
     }
 
     [STAThread]

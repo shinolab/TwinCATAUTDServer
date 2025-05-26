@@ -22,7 +22,7 @@ internal enum CpuBaseTime
 
 internal static class CpuBaseTimeParser
 {
-    private static Dictionary<string, CpuBaseTime> AvailableTime = new()
+    internal static Dictionary<string, CpuBaseTime> AvailableTime = new()
     {
         { "none", CpuBaseTime.None },
         { "1ms", CpuBaseTime.T_1ms },
