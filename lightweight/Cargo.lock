@@ -133,11 +133,11 @@ checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
 
 [[package]]
 name = "autd3"
-version = "32.1.1"
+version = "33.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6feb8fdc10ccefef1f96abf09ae684593de37e0770c60891ec0cd1890c7a3c8c"
+checksum = "b17089f051ec0a5eb3c20ca6e8fbd9f4a9e269cf4ce7eddf46ac68179cd06c05"
 dependencies = [
- "autd3-core",
+ "autd3-core 33.0.0",
  "autd3-derive",
  "autd3-driver",
  "autd3-firmware-emulator",
@@ -161,6 +161,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b36fb64e93260305f306631b04d2dcc44e745866e0d2eca53d048226bfe18b69"
 dependencies = [
  "async-trait",
+ "bvh",
+ "derive_more",
+ "getset",
+ "nalgebra",
+ "paste",
+ "thiserror",
+ "time",
+ "zerocopy",
+]
+
+[[package]]
+name = "autd3-core"
+version = "33.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e47f5b7d6bf912bbdb0b913d7e6347054e8127a99a4ed5fe7b1fb4f74b11e6cc"
+dependencies = [
+ "async-trait",
  "autd3-derive",
  "bit-vec",
  "bvh",
@@ -171,15 +188,16 @@ dependencies = [
  "thiserror",
  "time",
  "tracing",
+ "tynm",
  "windows",
  "zerocopy",
 ]
 
 [[package]]
 name = "autd3-derive"
-version = "32.1.1"
+version = "33.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a90f237e3c885492b4ef88cdbde529b25bc371e5304a649cc6e7e40e2b004423"
+checksum = "300bcfedf985582fa034c465a978ea99714e571728c840e76dca43ae7c5df313"
 dependencies = [
  "quote",
  "syn",
@@ -187,11 +205,11 @@ dependencies = [
 
 [[package]]
 name = "autd3-driver"
-version = "32.1.1"
+version = "33.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b08e7e7850a54019135a27961ecad35f19e369094d443548e001bd8c2feffc7d"
+checksum = "45e66ae704bd2c04ddd813329550d6b3d75460635b53633c539e1a39cf83a54d"
 dependencies = [
- "autd3-core",
+ "autd3-core 33.0.0",
  "autd3-derive",
  "bitfield-struct",
  "bitflags",
@@ -205,14 +223,15 @@ dependencies = [
  "thiserror",
  "time",
  "tracing",
+ "tynm",
  "zerocopy",
 ]
 
 [[package]]
 name = "autd3-firmware-emulator"
-version = "32.1.1"
+version = "33.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a93bff25f5e507539691f79a49795f95ecd0f2315f7380a565aef5aa309203bf"
+checksum = "87eaba297382c5dbf7de1a8889f33df8d07cc2b91e71dba7dac537aada301016"
 dependencies = [
  "autd3-driver",
  "bitfield-struct",
@@ -223,11 +242,11 @@ dependencies = [
 
 [[package]]
 name = "autd3-gain-holo"
-version = "32.1.1"
+version = "33.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "468a5e30b3b7b96bc6f396ca60db57fa113a3e87e225b61a73f335c789e7cba8"
+checksum = "fa0d071db78233772c1059addfa9eefa9eebad69d8dfb14644510a8058f7e6b9"
 dependencies = [
- "autd3-core",
+ "autd3-core 33.0.0",
  "derive_more",
  "nalgebra",
  "rand",
@@ -243,7 +262,7 @@ version = "32.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "869c534ac48a795821c8b2498d766122c2799325f999720d5ca328534f7a0208"
 dependencies = [
- "autd3-core",
+ "autd3-core 32.1.1",
  "libloading",
  "thiserror",
  "zerocopy",
@@ -251,12 +270,12 @@ dependencies = [
 
 [[package]]
 name = "autd3-protobuf"
-version = "32.1.1"
+version = "33.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c848e610076cb7c15cb1758ae8a950f8dc9b4804e104d595112dafc4cf006312"
+checksum = "52bb40e94016368b0b1d423e8f14c4c8e959b75929b3c459eb7a1d6f5f7a9dc9"
 dependencies = [
  "autd3",
- "autd3-core",
+ "autd3-core 33.0.0",
  "autd3-driver",
  "autd3-gain-holo",
  "derive_more",
@@ -347,9 +366,9 @@ checksum = "5e764a1d40d510daf35e07be9eb06e75770908c27d411ee6c92109c9840eaaf7"
 
 [[package]]
 name = "bitfield-struct"
-version = "0.10.1"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2be5a46ba01b60005ae2c51a36a29cfe134bcacae2dd5cedcd4615fbaad1494b"
+checksum = "d3ca019570363e800b05ad4fd890734f28ac7b72f563ad8a35079efb793616f8"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -358,9 +377,9 @@ dependencies = [
 
 [[package]]
 name = "bitflags"
-version = "2.9.0"
+version = "2.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c8214115b7bf84099f1309324e63141d4c5d7cc26862f97a0a857dbefe165bd"
+checksum = "1b8e56985ec62d17e9c1001dc89c88ecd7dc08e47eba5ec7c29c7b5eeecde967"
 
 [[package]]
 name = "bumpalo"
