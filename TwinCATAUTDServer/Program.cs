@@ -30,11 +30,6 @@ internal class Program
             description: "CPU base time.",
             parseArgument: CpuBaseTimeParser.Parse
         );
-        var syncMode = new Option<SyncMode>(
-            aliases: new[] { "--mode", "-m" },
-            description: "Sync mode",
-            getDefaultValue: () => SyncMode.DC
-        );
         var keep = new Option<bool>(
             aliases: new[] { "--keep", "-k" },
             description: "Keep TwinCAT XAE Shell window open",
@@ -46,10 +41,9 @@ internal class Program
         rootCommand.AddOption(sync0CycleTime);
         rootCommand.AddOption(taskCycleTime);
         rootCommand.AddOption(cpuBaseTime);
-        rootCommand.AddOption(syncMode);
         rootCommand.AddOption(keep);
 
-        rootCommand.SetHandler(Setup, clientIpAddr, sync0CycleTime, taskCycleTime, cpuBaseTime, syncMode, keep);
+        rootCommand.SetHandler(Setup, clientIpAddr, sync0CycleTime, taskCycleTime, cpuBaseTime, keep);
 
         var parser = new CommandLineBuilder(rootCommand)
         .UseDefaults()
@@ -66,9 +60,9 @@ internal class Program
     }
 
     [STAThread]
-    private static void Setup(string clientIpAddr, int sync0CycleTime, int taskCycleTime, CpuBaseTime cpuBaseTime, SyncMode syncMode, bool keep)
+    private static void Setup(string clientIpAddr, int sync0CycleTime, int taskCycleTime, CpuBaseTime cpuBaseTime, bool keep)
     {
         var baseTime = CpuBaseTimeParser.ToValueUnitsOf100ns(cpuBaseTime);
-        (new SetupTwinCAT(clientIpAddr, syncMode, baseTime * taskCycleTime, baseTime, 500000 * sync0CycleTime, keep)).Run();
+        (new SetupTwinCAT(clientIpAddr, baseTime * taskCycleTime, baseTime, 500000 * sync0CycleTime, keep)).Run();
     }
 }
