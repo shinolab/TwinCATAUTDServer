@@ -18,16 +18,14 @@ internal class SetupTwinCAT
     private const int BodySize = 249;
 
     private readonly string _clientIpAddr;
-    private readonly SyncMode _syncMode;
     private readonly int _taskCycleTime;
     private readonly int _cpuBaseTime;
     private readonly int _sync0CycleTime;
     private readonly bool _keep;
 
-    internal SetupTwinCAT(string clientIpAddr, SyncMode syncMode, int taskCycleTime, int cpuBaseTime, int sync0CycleTime, bool keep)
+    internal SetupTwinCAT(string clientIpAddr, int taskCycleTime, int cpuBaseTime, int sync0CycleTime, bool keep)
     {
         _clientIpAddr = clientIpAddr;
-        _syncMode = syncMode;
         _taskCycleTime = taskCycleTime;
         _cpuBaseTime = cpuBaseTime;
         _sync0CycleTime = sync0CycleTime;
@@ -245,7 +243,6 @@ internal class SetupTwinCAT
             bdoc.LoadXml(bxml);
 
             // set DC
-            if (_syncMode == SyncMode.DC)
             {
                 var dcOpmodes = bdoc.SelectNodes("TreeItem/EtherCAT/Slave/DC/OpMode");
                 foreach (XmlNode item in dcOpmodes)
@@ -255,31 +252,6 @@ internal class SetupTwinCAT
                         var attr = bdoc.CreateAttribute("Selected");
                         attr.Value = "true";
                         item.Attributes?.SetNamedItem(attr);
-
-                        item.SelectSingleNode("CycleTimeSync0").InnerText = _sync0CycleTime.ToString();
-                        attr = bdoc.CreateAttribute("Factor");
-                        attr.Value = "0";
-                        item.Attributes?.SetNamedItem(attr);
-                        item.SelectSingleNode("CycleTimeSync0").Attributes?.SetNamedItem(attr);
-                    }
-                    else
-                    {
-                        item.Attributes?.RemoveAll();
-                    }
-                }
-            }
-            else
-            {
-                var dcOpmodes = bdoc.SelectNodes("TreeItem/EtherCAT/Slave/DC/OpMode");
-                foreach (XmlNode item in dcOpmodes)
-                {
-                    if (item.SelectSingleNode("Name")?.InnerText == "Synchron")
-                    {
-                        var attr = bdoc.CreateAttribute("Selected");
-                        attr.Value = "true";
-                        item.Attributes?.SetNamedItem(attr);
-
-                        item.SelectSingleNode("AssignActivate").InnerText = "#x300";
 
                         item.SelectSingleNode("CycleTimeSync0").InnerText = _sync0CycleTime.ToString();
                         attr = bdoc.CreateAttribute("Factor");
