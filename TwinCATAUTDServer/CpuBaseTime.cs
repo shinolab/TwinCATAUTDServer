@@ -1,28 +1,32 @@
-﻿using System.CommandLine.Parsing;
+﻿using System;
+using System.Collections.Generic;
+using System.CommandLine.Parsing;
+using System.Linq;
 
-namespace TwinCATAUTDServer;
-
-internal enum CpuBaseTime
+namespace TwinCATAUTDServer
 {
-    T_1ms,
-    T_500us,
-    T_333us,
-    T_250us,
-    T_200us,
-    T_125us,
-    T_100us,
-    T_83p3us,
-    T_76p9us,
-    T_71p4us,
-    T_66p6us,
-    T_62p5us,
-    T_50us,
-    None
-}
 
-internal static class CpuBaseTimeParser
-{
-    internal static Dictionary<string, CpuBaseTime> AvailableTime = new()
+    internal enum CpuBaseTime
+    {
+        T_1ms,
+        T_500us,
+        T_333us,
+        T_250us,
+        T_200us,
+        T_125us,
+        T_100us,
+        T_83p3us,
+        T_76p9us,
+        T_71p4us,
+        T_66p6us,
+        T_62p5us,
+        T_50us,
+        None
+    }
+
+    internal static class CpuBaseTimeParser
+    {
+        internal static Dictionary<string, CpuBaseTime> AvailableTime = new Dictionary<string, CpuBaseTime>()
     {
         { "none", CpuBaseTime.None },
         { "1ms", CpuBaseTime.T_1ms },
@@ -40,39 +44,41 @@ internal static class CpuBaseTimeParser
         { "50us", CpuBaseTime.T_50us },
     };
 
-    internal static int ToValueUnitsOf100ns(CpuBaseTime cpuBaseTime)
-    {
-        return cpuBaseTime switch
+        internal static int ToValueUnitsOf100ns(CpuBaseTime cpuBaseTime)
         {
-            CpuBaseTime.None => 0,
-            CpuBaseTime.T_1ms => 10000,
-            CpuBaseTime.T_500us => 5000,
-            CpuBaseTime.T_333us => 3333,
-            CpuBaseTime.T_250us => 2500,
-            CpuBaseTime.T_200us => 2000,
-            CpuBaseTime.T_125us => 1250,
-            CpuBaseTime.T_100us => 1000,
-            CpuBaseTime.T_83p3us => 833,
-            CpuBaseTime.T_76p9us => 769,
-            CpuBaseTime.T_71p4us => 714,
-            CpuBaseTime.T_66p6us => 666,
-            CpuBaseTime.T_62p5us => 625,
-            CpuBaseTime.T_50us => 500,
-            _ => throw new ArgumentOutOfRangeException(nameof(cpuBaseTime), cpuBaseTime, null),
-        };
-    }
+            switch (cpuBaseTime)
+            {
+                case CpuBaseTime.None: return 0;
+                case CpuBaseTime.T_1ms: return 10000;
+                case CpuBaseTime.T_500us: return 5000;
+                case CpuBaseTime.T_333us: return 3333;
+                case CpuBaseTime.T_250us: return 2500;
+                case CpuBaseTime.T_200us: return 2000;
+                case CpuBaseTime.T_125us: return 1250;
+                case CpuBaseTime.T_100us: return 1000;
+                case CpuBaseTime.T_83p3us: return 833;
+                case CpuBaseTime.T_76p9us: return 769;
+                case CpuBaseTime.T_71p4us: return 714;
+                case CpuBaseTime.T_66p6us: return 666;
+                case CpuBaseTime.T_62p5us: return 625;
+                case CpuBaseTime.T_50us: return 500;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(cpuBaseTime), cpuBaseTime, null);
+            }
+        }
 
-    internal static CpuBaseTime Parse(ArgumentResult result)
-    {
-        var availableTime = string.Join(", ", AvailableTime.Select(x => x.Key));
+        internal static CpuBaseTime Parse(ArgumentResult result)
+        {
+            var availableTime = string.Join(", ", AvailableTime.Select(x => x.Key));
 
-        if (result.Tokens.Count != 1)
-            throw new ArgumentException($"Expected 1 argument, but got {result.Tokens.Count}. Available options: {availableTime}.");
+            if (result.Tokens.Count != 1)
+                throw new ArgumentException($"Expected 1 argument, but got {result.Tokens.Count}. Available options: {availableTime}.");
 
-        var time = result.Tokens[0].Value.ToLowerInvariant();
-        if (AvailableTime.TryGetValue(time, out var cpuBaseTime))
-            return cpuBaseTime;
-        else
-            throw new ArgumentException($"Invalid CPU base time '{time}'. Available options: {availableTime}.");
+            var time = result.Tokens[0].Value.ToLowerInvariant();
+            if (AvailableTime.TryGetValue(time, out var cpuBaseTime))
+                return cpuBaseTime;
+            else
+                throw new ArgumentException($"Invalid CPU base time '{time}'. Available options: {availableTime}.");
+        }
     }
 }

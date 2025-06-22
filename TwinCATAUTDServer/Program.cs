@@ -1,68 +1,77 @@
-﻿using System.CommandLine;
-using System.CommandLine.Builder;
-using System.CommandLine.Parsing;
+﻿using System;
+using System.CommandLine;
+using System.Linq;
 
-namespace TwinCATAUTDServer;
-internal class Program
+namespace TwinCATAUTDServer
 {
-    [STAThread]
-    private static int Main(string[] args)
+    internal class Program
     {
-        Console.OutputEncoding = System.Text.Encoding.UTF8;
-
-        var clientIpAddr = new Option<string>(
-            aliases: new[] { "--client", "-c" },
-            description: "Client IP address. if empty, use localhost.",
-            getDefaultValue: () => ""
-        );
-        var sync0CycleTime = new Option<int>(
-            aliases: new[] { "--sync0", "-s" },
-            description: "Sync0 cycle time in units of 500μs.",
-            getDefaultValue: () => 2
-        );
-        var taskCycleTime = new Option<int>(
-            aliases: new[] { "--task", "-t" },
-            description: "Task cycle time in units of CPU base time.",
-            getDefaultValue: () => 1
-        );
-        var cpuBaseTime = new Option<CpuBaseTime>(
-            aliases: new[] { "--base", "-b" },
-            description: "CPU base time.",
-            parseArgument: CpuBaseTimeParser.Parse
-        );
-        var keep = new Option<bool>(
-            aliases: new[] { "--keep", "-k" },
-            description: "Keep TwinCAT XAE Shell window open",
-            getDefaultValue: () => false
-        );
-
-        var rootCommand = new RootCommand("TwinCAT AUTD3 server");
-        rootCommand.AddOption(clientIpAddr);
-        rootCommand.AddOption(sync0CycleTime);
-        rootCommand.AddOption(taskCycleTime);
-        rootCommand.AddOption(cpuBaseTime);
-        rootCommand.AddOption(keep);
-
-        rootCommand.SetHandler(Setup, clientIpAddr, sync0CycleTime, taskCycleTime, cpuBaseTime, keep);
-
-        var parser = new CommandLineBuilder(rootCommand)
-        .UseDefaults()
-        .UseHelp(ctx =>
+        [STAThread]
+        private static int Main(string[] args)
         {
-            ctx.HelpBuilder.CustomizeSymbol(cpuBaseTime,
-                firstColumnText: (_) => $"-b, --base <{string.Join("|", CpuBaseTimeParser.AvailableTime.Select(x => x.Key))}>",
-                secondColumnText: (_) => $"{cpuBaseTime.Description} [default: 1ms]"
-                );
-        })
-        .Build();
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-        return parser.Invoke(args);
-    }
+            var clientIpAddr = new Option<string>("--client", "-c")
+            {
+                Description = "Client IP address. if empty, use localhost.",
+                DefaultValueFactory = _ => "",
+            };
+            var sync0CycleTime = new Option<int>("--sync0", "-s")
+            {
+                Description = "Sync0 cycle time in units of 500μs.",
+                DefaultValueFactory = _ => 2,
+            };
+            var taskCycleTime = new Option<int>("--task", "-t")
+            {
+                Description = "Task cycle time in units of CPU base time.",
+                DefaultValueFactory = _ => 1,
+            };
+            var cpuBaseTime = new Option<CpuBaseTime>("--base", "-b")
+            {
+                Description = "CPU base time.",
+                CustomParser = CpuBaseTimeParser.Parse,
+                DefaultValueFactory = _ => CpuBaseTime.T_1ms,
+            };
+            cpuBaseTime.AcceptOnlyFromAmong(CpuBaseTimeParser.AvailableTime.Select(x => x.Key).ToArray());
+            var keep = new Option<bool>("--keep", "-k")
+            {
+                Description = "Keep TwinCAT XAE Shell window open.",
+                DefaultValueFactory = _ => false
+            };
+            var debug = new Option<bool>("--debug", "-d")
+            {
+                Description = "Enable debug mode.",
+                DefaultValueFactory = _ => false
+            };
 
-    [STAThread]
-    private static void Setup(string clientIpAddr, int sync0CycleTime, int taskCycleTime, CpuBaseTime cpuBaseTime, bool keep)
-    {
-        var baseTime = CpuBaseTimeParser.ToValueUnitsOf100ns(cpuBaseTime);
-        (new SetupTwinCAT(clientIpAddr, baseTime * taskCycleTime, baseTime, 500000 * sync0CycleTime, keep)).Run();
+            var rootCommand = new RootCommand("TwinCAT AUTD3 server");
+            rootCommand.Options.Add(clientIpAddr);
+            rootCommand.Options.Add(sync0CycleTime);
+            rootCommand.Options.Add(taskCycleTime);
+            rootCommand.Options.Add(cpuBaseTime);
+            rootCommand.Options.Add(keep);
+            rootCommand.Options.Add(debug);
+
+            rootCommand.SetAction(parseResult =>
+            {
+                var clientIp = parseResult.GetValue(clientIpAddr);
+                var sync0Cycle = parseResult.GetValue(sync0CycleTime);
+                var taskCycle = parseResult.GetValue(taskCycleTime);
+                var baseTime = parseResult.GetValue(cpuBaseTime);
+                var keepOpen = parseResult.GetValue(keep);
+                var debugMode = parseResult.GetValue(debug);
+                Setup(clientIp, sync0Cycle, taskCycle, baseTime, keepOpen, debugMode);
+            });
+
+            return rootCommand.Parse(args).Invoke();
+        }
+
+        [STAThread]
+        private static void Setup(string clientIpAddr, int sync0CycleTime, int taskCycleTime, CpuBaseTime cpuBaseTime, bool keep, bool debugMode)
+        {
+            var baseTime = CpuBaseTimeParser.ToValueUnitsOf100ns(cpuBaseTime);
+            var sync0CycleTimeInNs = 500000 * sync0CycleTime;
+            (new SetupTwinCAT(clientIpAddr, baseTime * taskCycleTime, baseTime, sync0CycleTimeInNs, keep, debugMode)).Run();
+        }
     }
 }
