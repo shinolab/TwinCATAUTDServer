@@ -53,17 +53,17 @@ namespace TwinCATAUTDServer
         {
             var solutionPath = Path.Combine(Environment.GetEnvironmentVariable("temp") ?? string.Empty, SolutionName);
             MessageFilter.Register();
+            DTE2 dte = null;
             try
             {
-                // Close all TwinCAT Autd Server solutions currently opened
-                var processes = System.Diagnostics.Process.GetProcesses().Where(x => x.MainWindowTitle.StartsWith(SolutionName) && x.ProcessName.Contains("devenv"));
+                var processes = System.Diagnostics.Process.GetProcesses().Where(x => x.MainWindowTitle.StartsWith(SolutionName) && x.ProcessName.Contains("TcXaeShell"));
                 foreach (var process in processes) GetDte(process.Id)?.Quit();
 
                 IPAddress.TryParse(_clientIpAddr ?? string.Empty, out var ipAddr);
 
                 Console.WriteLine("Connecting to TcXaeShell DTE...");
                 var t = Type.GetTypeFromProgID("TcXaeShell.DTE.17.0");
-                var dte = (DTE2)Activator.CreateInstance(t);
+                dte = (DTE2)Activator.CreateInstance(t);
 
                 dte.SuppressUI = false;
                 dte.MainWindow.Visible = true;
@@ -81,7 +81,7 @@ namespace TwinCATAUTDServer
                     AddRoute(sysManager, ipAddr);
                 }
                 Console.WriteLine("Scanning Devices...");
-                var autds = ScanAutDs(sysManager);
+                var autds = ScanAUTDs(sysManager);
                 AssignCpuCores(sysManager);
                 SetupTask(sysManager, autds);
                 Console.WriteLine("Activating and Restarting TwinCAT3...");
@@ -99,13 +99,14 @@ namespace TwinCATAUTDServer
 
                 Console.WriteLine($"Saving the Project...");
                 SaveProject(dte, project, solutionPath);
-                if (!_keep) dte.Quit();
             }
             catch (Exception e)
             {
                 Console.Write("Error: ");
                 Console.WriteLine(e.Message);
             }
+
+            if (!_keep) dte?.Quit();
 
             MessageFilter.Revoke();
         }
@@ -225,7 +226,7 @@ namespace TwinCATAUTDServer
             routeConfiguration.ConsumeXml(addProjectRouteIp);
         }
 
-        private List<ITcSmTreeItem> ScanAutDs(ITcSysManager sysManager)
+        private List<ITcSmTreeItem> ScanAUTDs(ITcSysManager sysManager)
         {
             var devices = (ITcSmTreeItem3)sysManager.LookupTreeItem("TIID");
             var doc = new XmlDocument();
@@ -235,9 +236,9 @@ namespace TwinCATAUTDServer
             var ethernetNodes = (from XmlNode node in nodes let typeNode = node.SelectSingleNode("ItemSubType") let subType = int.Parse(typeNode.InnerText) where subType == (int)DeviceType.EtherCAT_AutomationProtocol || subType == (int)DeviceType.EtherCAT_DirectMode || subType == (int)DeviceType.EtherCAT_DirectModeV210 select node).ToList();
 
             if (ethernetNodes.Count == 0)
-                throw new Exception("No devices were found. Check if TwinCAT3 is in Config Mode");
+                throw new Exception("No TwinCAT RT-Ethernet adapters were found.");
 
-            Console.WriteLine("Scan found a RT-compatible Ethernet device.");
+            Console.WriteLine("Scan found a RT-Ethernet adapter.");
             var device = (ITcSmTreeItem3)devices.CreateChild("EtherCAT Master", (int)DeviceType.EtherCAT_DirectMode, null);
 
             // Taking only the first found Ethernet Adapter
@@ -287,7 +288,10 @@ namespace TwinCATAUTDServer
                 autds.Add(box);
             }
 
-            Console.WriteLine($"{autds.Count} AUTDs are found and added.");
+            if (autds.Count == 0)
+                throw new Exception("No AUTD devices were found.");
+
+            Console.WriteLine($"{autds.Count} AUTD device{(autds.Count == 1 ? " is" : "s are")} found and added.");
 
             return autds;
         }
@@ -304,7 +308,6 @@ namespace TwinCATAUTDServer
             task1.ConsumeXml(doc.OuterXml);
 
             var task1Out = sysManager.LookupTreeItem("TIRT^Task 1^Outputs");
-            // make gain body
             for (var id = 0; id < autds.Count; id++)
             {
                 for (var i = 0; i < HeadSize; i++)
@@ -324,7 +327,6 @@ namespace TwinCATAUTDServer
                 var name = $"input[{id}]";
                 task1In.CreateChild(name, -1, null, "WORD");
             }
-            // connect links
             for (var id = 0; id < autds.Count; id++)
             {
                 for (var i = 0; i < HeadSize; i++)
@@ -403,26 +405,17 @@ namespace TwinCATAUTDServer
 
     public class MessageFilter : IOleMessageFilter
     {
-        //
-        // Class containing the IOleMessageFilter
-        // thread error-handling functions.
-
-        // Start the filter.
         public static void Register()
         {
             IOleMessageFilter newFilter = new MessageFilter();
             CoRegisterMessageFilter(newFilter, out _);
         }
 
-        // Done with the filter, close it.
         public static void Revoke()
         {
             CoRegisterMessageFilter(null, out _);
         }
 
-        //
-        // IOleMessageFilter functions.
-        // Handle incoming thread requests.
         int IOleMessageFilter.HandleInComingCall(int dwCallType,
           IntPtr hTaskCaller, int dwTickCount, IntPtr
           lpInterfaceInfo)
@@ -430,7 +423,6 @@ namespace TwinCATAUTDServer
             return 0;
         }
 
-        // Thread call was rejected, so try again.
         int IOleMessageFilter.RetryRejectedCall(IntPtr
           hTaskCallee, int dwTickCount, int dwRejectType)
         {
@@ -443,7 +435,6 @@ namespace TwinCATAUTDServer
             return 2;
         }
 
-        // Implement the IOleMessageFilter interface.
         [DllImport("Ole32.dll")]
         private static extern int
           CoRegisterMessageFilter(IOleMessageFilter newFilter, out
