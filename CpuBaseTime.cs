@@ -5,7 +5,6 @@ using System.Linq;
 
 namespace TwinCATAUTDServer
 {
-
     internal enum CpuBaseTime
     {
         T_1ms,
@@ -26,7 +25,7 @@ namespace TwinCATAUTDServer
 
     internal static class CpuBaseTimeParser
     {
-        internal static Dictionary<string, CpuBaseTime> AvailableTime = new Dictionary<string, CpuBaseTime>()
+        private static Dictionary<string, CpuBaseTime> _availables = new Dictionary<string, CpuBaseTime>()
     {
         { "none", CpuBaseTime.None },
         { "1ms", CpuBaseTime.T_1ms },
@@ -67,15 +66,20 @@ namespace TwinCATAUTDServer
             }
         }
 
-        internal static CpuBaseTime Parse(ArgumentResult result)
+        internal static IEnumerable<string> AvailableTimes()
         {
-            var availableTime = string.Join(", ", AvailableTime.Select(x => x.Key));
+            return _availables.OrderBy(x => ToValueUnitsOf100ns(x.Value)).Select(x => x.Key);
+        }
+
+        internal static CpuBaseTime Parse(OptionResult result)
+        {
+            var availableTime = string.Join(", ", AvailableTimes());
 
             if (result.Tokens.Count != 1)
                 throw new ArgumentException($"Expected 1 argument, but got {result.Tokens.Count}. Available options: {availableTime}.");
 
             var time = result.Tokens[0].Value.ToLowerInvariant();
-            if (AvailableTime.TryGetValue(time, out var cpuBaseTime))
+            if (_availables.TryGetValue(time, out var cpuBaseTime))
                 return cpuBaseTime;
             else
                 throw new ArgumentException($"Invalid CPU base time '{time}'. Available options: {availableTime}.");
