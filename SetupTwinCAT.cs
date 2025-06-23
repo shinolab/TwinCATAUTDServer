@@ -81,6 +81,7 @@ namespace TwinCATAUTDServer
                     AddRoute(sysManager, ipAddr);
                 }
                 Console.WriteLine("Scanning Devices...");
+                System.Threading.Thread.Sleep(1000);
                 var autds = ScanAUTDs(sysManager);
                 AssignCpuCores(sysManager);
                 SetupTask(sysManager, autds);
