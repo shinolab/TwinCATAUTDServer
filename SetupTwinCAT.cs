@@ -23,6 +23,7 @@ namespace TwinCATAUTDServer
         private const int HeadSize = 64;
         private const int BodySize = 249;
 
+        private readonly TwinCATVersion _version;
         private readonly string _clientIpAddr;
         private readonly string _deviceName;
         private readonly int _taskCycleTime;
@@ -31,10 +32,11 @@ namespace TwinCATAUTDServer
         private readonly bool _keep;
         private readonly bool _debug;
 
-        internal SetupTwinCAT(string clientIpAddr, string deviceName, int taskCycleTime, int cpuBaseTime, int sync0CycleTime, bool keep, bool debug)
+        internal SetupTwinCAT(TwinCATVersion version, string clientIpAddr, string deviceName, int taskCycleTime, int cpuBaseTime, int sync0CycleTime, bool keep, bool debug)
         {
             if (debug)
             {
+                Console.WriteLine($"TwinCAT version: {version}");
                 Console.WriteLine($"Client IP: {clientIpAddr}");
                 Console.WriteLine($"Device Name: {deviceName}");
                 Console.WriteLine($"Sync0 Cycle Time: {sync0CycleTime}");
@@ -43,6 +45,7 @@ namespace TwinCATAUTDServer
                 Console.WriteLine($"Keep Open: {keep}");
             }
 
+            _version = version;
             _clientIpAddr = clientIpAddr;
             _deviceName = deviceName;
             _taskCycleTime = taskCycleTime;
@@ -50,6 +53,30 @@ namespace TwinCATAUTDServer
             _sync0CycleTime = sync0CycleTime;
             _keep = keep;
             _debug = debug;
+        }
+
+        private string ProgID()
+        {
+            switch (_version)
+            {
+                case TwinCATVersion.Build4024:
+                    return "TcXaeShell.DTE.15.0";
+                case TwinCATVersion.Build4026:
+                    return "TcXaeShell.DTE.17.0";
+            }
+            throw new Exception($"TwinCAT version {_version} is not supported.");
+        }
+
+        private string TemplatePath()
+        {
+            switch (_version)
+            {
+                case TwinCATVersion.Build4024:
+                    return @"C:\TwinCAT\3.1\Components\Base\PrjTemplate\TwinCAT Project.tsproj";
+                case TwinCATVersion.Build4026:
+                    return @"C:\Program Files (x86)\Beckhoff\TwinCAT\3.1\Components\Base\PrjTemplate\TwinCAT Project.tsproj";
+            }
+            throw new Exception($"TwinCAT version {_version} is not supported.");
         }
 
         [STAThread]
@@ -66,7 +93,7 @@ namespace TwinCATAUTDServer
                 IPAddress.TryParse(_clientIpAddr ?? string.Empty, out var ipAddr);
 
                 Console.WriteLine("Connecting to TcXaeShell DTE...");
-                var t = Type.GetTypeFromProgID("TcXaeShell.DTE.17.0");
+                var t = Type.GetTypeFromProgID(ProgID());
                 dte = (DTE2)Activator.CreateInstance(t);
 
                 dte.SuppressUI = false;
@@ -119,9 +146,9 @@ namespace TwinCATAUTDServer
         [DllImport("ole32.dll")]
         private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
 
-        public static DTE GetDte(int processId)
+        public DTE GetDte(int processId)
         {
-            var progId = "!TcXaeShell.DTE.17.0:" + processId;
+            var progId = $"!{ProgID()}:{processId}";
             object runningObject = null;
 
             IBindCtx bindCtx = null;
@@ -194,7 +221,7 @@ namespace TwinCATAUTDServer
             }
         }
 
-        private static Project CreateProject(DTE2 dte, string path)
+        private Project CreateProject(DTE2 dte, string path)
         {
             if (Directory.Exists(path))
                 DeleteDirectory(path);
@@ -204,8 +231,7 @@ namespace TwinCATAUTDServer
             solution.Create(path, SolutionName);
             solution.SaveAs(Path.Combine(path, SolutionName + ".sln"));
 
-            const string template = @"C:\Program Files (x86)\Beckhoff\TwinCAT\3.1\Components\Base\PrjTemplate\TwinCAT Project.tsproj"; //path to project template
-            return solution.AddFromTemplate(template, path, SolutionName);
+            return solution.AddFromTemplate(TemplatePath(), path, SolutionName);
         }
 
         private static void SaveProject(DTE2 dte, Project project, string path)
