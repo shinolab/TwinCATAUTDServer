@@ -13,7 +13,12 @@ namespace TwinCATAUTDServer
 
             var clientIpAddr = new Option<string>("--client", "-c")
             {
-                Description = "Client IP address. if empty, use localhost.",
+                Description = "Client IP address. If empty, use localhost.",
+                DefaultValueFactory = _ => "",
+            };
+            var deviceName = new Option<string>("--device_name")
+            {
+                Description = "Ethernet device name. If empty, use the first device found.",
                 DefaultValueFactory = _ => "",
             };
             var sync0CycleTime = new Option<int>("--sync0", "-s")
@@ -46,6 +51,7 @@ namespace TwinCATAUTDServer
 
             var rootCommand = new RootCommand("TwinCAT AUTD3 server");
             rootCommand.Options.Add(clientIpAddr);
+            rootCommand.Options.Add(deviceName);
             rootCommand.Options.Add(sync0CycleTime);
             rootCommand.Options.Add(taskCycleTime);
             rootCommand.Options.Add(cpuBaseTime);
@@ -55,23 +61,24 @@ namespace TwinCATAUTDServer
             rootCommand.SetAction(parseResult =>
             {
                 var clientIp = parseResult.GetValue(clientIpAddr);
+                var devName = parseResult.GetValue(deviceName);
                 var sync0Cycle = parseResult.GetValue(sync0CycleTime);
                 var taskCycle = parseResult.GetValue(taskCycleTime);
                 var baseTime = parseResult.GetValue(cpuBaseTime);
                 var keepOpen = parseResult.GetValue(keep);
                 var debugMode = parseResult.GetValue(debug);
-                Setup(clientIp, sync0Cycle, taskCycle, baseTime, keepOpen, debugMode);
+                Setup(clientIp, devName, sync0Cycle, taskCycle, baseTime, keepOpen, debugMode);
             });
 
             return rootCommand.Parse(args).Invoke();
         }
 
         [STAThread]
-        private static void Setup(string clientIpAddr, int sync0CycleTime, int taskCycleTime, CpuBaseTime cpuBaseTime, bool keep, bool debugMode)
+        private static void Setup(string clientIpAddr, string deviceName, int sync0CycleTime, int taskCycleTime, CpuBaseTime cpuBaseTime, bool keep, bool debugMode)
         {
             var baseTime = CpuBaseTimeParser.ToValueUnitsOf100ns(cpuBaseTime);
             var sync0CycleTimeInNs = 500000 * sync0CycleTime;
-            (new SetupTwinCAT(clientIpAddr, baseTime * taskCycleTime, baseTime, sync0CycleTimeInNs, keep, debugMode)).Run();
+            (new SetupTwinCAT(clientIpAddr, deviceName, baseTime * taskCycleTime, baseTime, sync0CycleTimeInNs, keep, debugMode)).Run();
         }
     }
 }

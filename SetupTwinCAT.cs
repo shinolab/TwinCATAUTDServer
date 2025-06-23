@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text.RegularExpressions;
 using System.Xml;
+using System.Xml.Linq;
 using TCatSysManagerLib;
 using TwinCAT.Ads;
 using TwinCAT.SystemManager;
@@ -23,17 +24,19 @@ namespace TwinCATAUTDServer
         private const int BodySize = 249;
 
         private readonly string _clientIpAddr;
+        private readonly string _deviceName;
         private readonly int _taskCycleTime;
         private readonly int _cpuBaseTime;
         private readonly int _sync0CycleTime;
         private readonly bool _keep;
         private readonly bool _debug;
 
-        internal SetupTwinCAT(string clientIpAddr, int taskCycleTime, int cpuBaseTime, int sync0CycleTime, bool keep, bool debug)
+        internal SetupTwinCAT(string clientIpAddr, string deviceName, int taskCycleTime, int cpuBaseTime, int sync0CycleTime, bool keep, bool debug)
         {
             if (debug)
             {
                 Console.WriteLine($"Client IP: {clientIpAddr}");
+                Console.WriteLine($"Device Name: {deviceName}");
                 Console.WriteLine($"Sync0 Cycle Time: {sync0CycleTime}");
                 Console.WriteLine($"Task Cycle Time: {taskCycleTime}");
                 Console.WriteLine($"CPU Base Time: {cpuBaseTime}");
@@ -41,6 +44,7 @@ namespace TwinCATAUTDServer
             }
 
             _clientIpAddr = clientIpAddr;
+            _deviceName = deviceName;
             _taskCycleTime = taskCycleTime;
             _cpuBaseTime = cpuBaseTime;
             _sync0CycleTime = sync0CycleTime;
@@ -239,11 +243,49 @@ namespace TwinCATAUTDServer
             if (ethernetNodes.Count == 0)
                 throw new Exception("No TwinCAT RT-Ethernet adapters were found.");
 
-            Console.WriteLine("Scan found a RT-Ethernet adapter.");
+            if (ethernetNodes.Count == 1)
+                Console.WriteLine("Scan found a RT-Ethernet adapter.");
+            else
+                Console.WriteLine($"Scan found {ethernetNodes.Count} RT-Ethernet adapters.");
+
+            if (_debug)
+            {
+                Console.WriteLine("Found Ethernet adapters:");
+                foreach (var node in ethernetNodes)
+                {
+                    var addrinfo = node.SelectSingleNode("AddressInfo");
+                    Console.WriteLine($"\t{addrinfo.SelectSingleNode("Pnp/DeviceName").InnerText} ({addrinfo.SelectSingleNode("Pnp/DeviceDesc").InnerText})");
+                }
+            }
+
+            XmlNode ethernetNode = null;
+
+            if (_deviceName == "")
+            {
+                ethernetNode = ethernetNodes[0];
+                if (ethernetNodes.Count != 1)
+                {
+                    var addrinfo = ethernetNode.SelectSingleNode("AddressInfo");
+                    Console.WriteLine($"Multiple RT-Ethernet adapters found, but no device name specified. Using {addrinfo.SelectSingleNode("Pnp/DeviceName").InnerText}.");
+                }
+            }
+            else
+            {
+                foreach (var node in ethernetNodes)
+                {
+                    var addrinfo = node.SelectSingleNode("AddressInfo");
+                    if (addrinfo.SelectSingleNode("Pnp/DeviceName").InnerText == _deviceName)
+                    {
+                        ethernetNode = node;
+                        break;
+                    }
+                }
+                if (ethernetNode == null)
+                    throw new Exception($"No RT-Ethernet adapter with name {_deviceName} found.");
+            }
+
             var device = (ITcSmTreeItem3)devices.CreateChild("EtherCAT Master", (int)DeviceType.EtherCAT_DirectMode, null);
 
-            // Taking only the first found Ethernet Adapter
-            var ethernetNode = ethernetNodes[0];
             var addressInfoNode = ethernetNode.SelectSingleNode("AddressInfo");
             addressInfoNode.SelectSingleNode("Pnp/DeviceDesc").InnerText = "TwincatEthernetDevice";
             // Set the Address Info
