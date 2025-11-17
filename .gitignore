@@ -355,3 +355,4 @@ MigrationBackup/
 target/
 *.zip
 *.tar.gz
+*.exe

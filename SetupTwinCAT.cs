@@ -30,9 +30,10 @@ namespace TwinCATAUTDServer
         private readonly int _cpuBaseTime;
         private readonly int _sync0CycleTime;
         private readonly bool _keep;
+        private readonly int _delayTime;
         private readonly bool _debug;
 
-        internal SetupTwinCAT(TwinCATVersion version, string clientIpAddr, string deviceName, int taskCycleTime, int cpuBaseTime, int sync0CycleTime, bool keep, bool debug)
+        internal SetupTwinCAT(TwinCATVersion version, string clientIpAddr, string deviceName, int taskCycleTime, int cpuBaseTime, int sync0CycleTime, bool keep, int delayTime, bool debug)
         {
             if (debug)
             {
@@ -42,6 +43,7 @@ namespace TwinCATAUTDServer
                 Console.WriteLine($"Sync0 Cycle Time: {sync0CycleTime}");
                 Console.WriteLine($"Task Cycle Time: {taskCycleTime}");
                 Console.WriteLine($"CPU Base Time: {cpuBaseTime}");
+                Console.WriteLine($"Delay Time: {delayTime} ms");
                 Console.WriteLine($"Keep Open: {keep}");
             }
 
@@ -52,6 +54,7 @@ namespace TwinCATAUTDServer
             _cpuBaseTime = cpuBaseTime;
             _sync0CycleTime = sync0CycleTime;
             _keep = keep;
+            _delayTime = delayTime;
             _debug = debug;
         }
 
@@ -102,7 +105,7 @@ namespace TwinCATAUTDServer
 
                 Console.WriteLine("Switching TwinCAT3 to Config Mode...");
                 SetConfigMode();
-                System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(_delayTime);
                 Console.WriteLine("Creating a Project...");
                 var project = CreateProject(dte, solutionPath);
                 ITcSysManager sysManager = (ITcSysManager)project.Object;
@@ -112,7 +115,7 @@ namespace TwinCATAUTDServer
                     AddRoute(sysManager, ipAddr);
                 }
                 Console.WriteLine("Scanning Devices...");
-                System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(_delayTime);
                 var autds = ScanAUTDs(sysManager);
                 AssignCpuCores(sysManager);
                 SetupTask(sysManager, autds);

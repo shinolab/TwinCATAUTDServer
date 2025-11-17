@@ -53,6 +53,12 @@ namespace TwinCATAUTDServer
                 Description = "Keep TwinCAT XAE Shell window open.",
                 DefaultValueFactory = _ => false
             };
+            var delayTime = new Option<int>("--delay")
+            {
+                Description = "Delay time to wait for the operation to complete (ms).",
+                DefaultValueFactory = _ => 1000,
+            };
+            delayTime.HelpName = "DELAY_MS";
             var debug = new Option<bool>("--debug", "-d")
             {
                 Description = "Enable debug mode.",
@@ -67,6 +73,7 @@ namespace TwinCATAUTDServer
             rootCommand.Options.Add(cpuBaseTime);
             rootCommand.Options.Add(tcVersion);
             rootCommand.Options.Add(keep);
+            rootCommand.Options.Add(delayTime);
             rootCommand.Options.Add(debug);
 
             rootCommand.SetAction(parseResult =>
@@ -78,19 +85,20 @@ namespace TwinCATAUTDServer
                 var baseTime = CpuBaseTimeParser.Parse(parseResult.GetResult(cpuBaseTime));
                 var version = TwinCATVersionParser.Parse(parseResult.GetResult(tcVersion));
                 var keepOpen = parseResult.GetValue(keep);
+                var delay= parseResult.GetValue(delayTime);
                 var debugMode = parseResult.GetValue(debug);
-                Setup(version, clientIp, devName, sync0Cycle, taskCycle, baseTime, keepOpen, debugMode);
+                Setup(version, clientIp, devName, sync0Cycle, taskCycle, baseTime, keepOpen, delay, debugMode);
             });
 
             return rootCommand.Parse(args).Invoke();
         }
 
         [STAThread]
-        private static void Setup(TwinCATVersion version, string clientIpAddr, string deviceName, int sync0CycleTime, int taskCycleTime, CpuBaseTime cpuBaseTime, bool keep, bool debugMode)
+        private static void Setup(TwinCATVersion version, string clientIpAddr, string deviceName, int sync0CycleTime, int taskCycleTime, CpuBaseTime cpuBaseTime, bool keep, int delayTime, bool debugMode)
         {
             var baseTime = CpuBaseTimeParser.ToValueUnitsOf100ns(cpuBaseTime);
             var sync0CycleTimeInNs = 500000 * sync0CycleTime;
-            (new SetupTwinCAT(version, clientIpAddr, deviceName, baseTime * taskCycleTime, baseTime, sync0CycleTimeInNs, keep, debugMode)).Run();
+            (new SetupTwinCAT(version, clientIpAddr, deviceName, baseTime * taskCycleTime, baseTime, sync0CycleTimeInNs, keep, delayTime, debugMode)).Run();
         }
     }
 }

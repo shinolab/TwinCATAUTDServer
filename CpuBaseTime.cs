@@ -74,11 +74,7 @@ namespace TwinCATAUTDServer
         internal static CpuBaseTime Parse(OptionResult result)
         {
             var availableTime = string.Join(", ", AvailableTimes());
-
-            if (result.Tokens.Count != 1)
-                throw new ArgumentException($"Expected 1 argument, but got {result.Tokens.Count}. Available options: {availableTime}.");
-
-            var time = result.Tokens[0].Value.ToLowerInvariant();
+            var time = result.GetValueOrDefault<string>().ToLowerInvariant();
             if (_availables.TryGetValue(time, out var cpuBaseTime))
                 return cpuBaseTime;
             else

@@ -27,11 +27,7 @@ namespace TwinCATAUTDServer
         internal static TwinCATVersion Parse(OptionResult result)
         {
             var availables = string.Join(", ", AvailableVersions());
-
-            if (result.Tokens.Count != 1)
-                throw new ArgumentException($"Expected 1 argument, but got {result.Tokens.Count}. Available options: {availables}.");
-
-            var version = result.Tokens[0].Value.ToLowerInvariant();
+            var version = result.GetValueOrDefault<string>().ToLowerInvariant();
             if (_availables.TryGetValue(version, out var v))
                 return v;
             else
